@@ -1,46 +1,35 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './components/Login';
-import Signup from './components/Signup';
-import Dashboard from './components/Dashboard';
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import './App.css';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Upload from './pages/Upload';
 
-function AppContent() {
-  const { token, isAuthenticated, login, logout } = useAuth();
+const ProtectedRoute = ({ children, isAuthenticated }) => {
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  return children;
+};
+
+const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-100">
-        <Navbar isAuthenticated={isAuthenticated} onLogout={logout} />
-        <div className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route 
-              path="/login" 
-              element={!isAuthenticated ? <Login onLogin={login} /> : <Navigate to="/dashboard" />} 
-            />
-            <Route 
-              path="/signup" 
-              element={!isAuthenticated ? <Signup onLogin={login} /> : <Navigate to="/dashboard" />} 
-            />
-            <Route 
-              path="/dashboard" 
-              element={isAuthenticated ? <Dashboard token={token} /> : <Navigate to="/login" />} 
-            />
-            <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
-          </Routes>
-        </div>
-      </div>
-    </Router>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+      <Outlet />
+    </div>
   );
-}
+};
 
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-}
-
-export default App;
+export default App; 
